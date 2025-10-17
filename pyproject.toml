@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "pamfilico-python-stripe-sdk"
+version = "0.1.0"
+description = "Pamfilico Stripe SDK for Python"
+authors = ["Kasper"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+stripe = "^8.9.0"
+pydantic = "^2.0.0"
+
+[tool.poetry.group.dev.dependencies]
+commitizen = "^4.9.1"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+version_files = [
+    "pyproject.toml:version"
+]
+update_changelog_on_bump = true
+tag_format = "v$version"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
