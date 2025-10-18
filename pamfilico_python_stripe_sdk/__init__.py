@@ -11,6 +11,13 @@ from pamfilico_python_stripe_sdk.models import (
     CustomerListResponse,
     CustomerListMeta,
 )
+from pamfilico_python_stripe_sdk.exceptions import (
+    StripeSDKException,
+    StripeAuthenticationError,
+    StripeAPIError,
+    StripeInvalidRequestError,
+    StripeValidationError,
+)
 
 __all__ = [
     "StripeService",
@@ -20,4 +27,9 @@ __all__ = [
     "CustomerResponse",
     "CustomerListResponse",
     "CustomerListMeta",
+    "StripeSDKException",
+    "StripeAuthenticationError",
+    "StripeAPIError",
+    "StripeInvalidRequestError",
+    "StripeValidationError",
 ]

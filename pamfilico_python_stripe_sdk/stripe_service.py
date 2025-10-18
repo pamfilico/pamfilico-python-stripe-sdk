@@ -11,6 +11,11 @@ from pamfilico_python_stripe_sdk.models import (
     CustomerCreateInput,
     CustomerUpdateInput,
 )
+from pamfilico_python_stripe_sdk.exceptions import (
+    StripeAuthenticationError,
+    StripeAPIError,
+    StripeInvalidRequestError,
+)
 
 
 class StripeService:
@@ -267,6 +272,11 @@ class StripeService:
                 - data: List of CustomerData models
                 - meta: CustomerListMeta with pagination info (has_more, total_count)
 
+        Raises:
+            StripeAuthenticationError: If Stripe API authentication fails
+            StripeInvalidRequestError: If request parameters are invalid
+            StripeAPIError: If Stripe API returns an error
+
         Example:
             >>> # List first page of customers
             >>> result = service.list_customers(limit=50)
@@ -283,35 +293,52 @@ class StripeService:
             ...     )
             ...     next_customers = next_page.data
         """
-        # Validate and cap limit
-        limit = min(limit, 100)
+        try:
+            # Validate and cap limit
+            limit = min(limit, 100)
 
-        # Build Stripe API request parameters
-        params = {"limit": limit}
-        if starting_after:
-            params["starting_after"] = starting_after
+            # Build Stripe API request parameters
+            params = {"limit": limit}
+            if starting_after:
+                params["starting_after"] = starting_after
 
-        # Fetch customers from Stripe
-        customers_response = stripe.Customer.list(**params)
+            # Fetch customers from Stripe
+            customers_response = stripe.Customer.list(**params)
 
-        # Serialize customer data
-        customers_data = []
-        for customer in customers_response.data:
-            customers_data.append(CustomerData(
-                id=customer.id,
-                email=customer.email,
-                name=customer.name,
-                created=customer.created,
-                balance=customer.balance,
-                currency=customer.currency,
-                delinquent=customer.delinquent,
-                description=customer.description,
-                metadata=dict(customer.metadata) if customer.metadata else {}
-            ))
+            # Serialize customer data
+            customers_data = []
+            for customer in customers_response.data:
+                customers_data.append(CustomerData(
+                    id=customer.id,
+                    email=customer.email,
+                    name=customer.name,
+                    created=customer.created,
+                    balance=customer.balance,
+                    currency=customer.currency,
+                    delinquent=customer.delinquent,
+                    description=customer.description,
+                    metadata=dict(customer.metadata) if customer.metadata else {}
+                ))
 
-        meta = CustomerListMeta(
-            has_more=customers_response.has_more,
-            total_count=len(customers_data)
-        )
+            meta = CustomerListMeta(
+                has_more=customers_response.has_more,
+                total_count=len(customers_data)
+            )
 
-        return CustomerListResponse(data=customers_data, meta=meta)
+            return CustomerListResponse(data=customers_data, meta=meta)
+
+        except stripe.error.AuthenticationError as e:
+            raise StripeAuthenticationError(
+                message=f"Stripe authentication failed: {str(e)}",
+                original_error=e
+            )
+        except stripe.error.InvalidRequestError as e:
+            raise StripeInvalidRequestError(
+                message=f"Invalid request to Stripe API: {str(e)}",
+                original_error=e
+            )
+        except stripe.error.StripeError as e:
+            raise StripeAPIError(
+                message=f"Stripe API error: {str(e)}",
+                original_error=e
+            )
